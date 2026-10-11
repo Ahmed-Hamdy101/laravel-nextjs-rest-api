@@ -5,7 +5,7 @@
 A production-ready **Laravel REST API** for admin dashboard backends, featuring role-based access control, Passport authentication, product/order management, and CSV export.
 
 [![Laravel](https://img.shields.io/badge/Laravel-10.x-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?logo=php)](https://php.net)
+[![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Laravel](https://github.com/Ahmed-Hamdy101/laravel-rest-api/actions/workflows/laravel.yml/badge.svg)](https://github.com/Ahmed-Hamdy101/laravel-rest-api/actions/workflows/laravel.yml)
@@ -14,7 +14,7 @@ A production-ready **Laravel REST API** for admin dashboard backends, featuring 
 ## Features
 
 - **JWT authentication** via Laravel Passport
-- **Role-based access control** — `admin`, `editor` roles with `CheckRole` middleware
+- **Role-based access control** — `Admin`, `Editor`, `User` roles with `CheckRole` middleware
 - **User management** — CRUD, profile update, password change
 - **Product management** — full CRUD with image upload via Laravel Storage
 - **Order management** — list, show, CSV export with streaming cursor
@@ -298,14 +298,14 @@ routes/
 graph TB
     subgraph Docker["Docker Environment"]
         subgraph Backend["Backend Container<br/>(Laravel 10.x)"]
-            PHP["PHP 8.4 FPM"]
-            Apache["Apache2 Web Server"]
+            PHP["PHP 8.4 CLI"]
+            Apache["artisan serve :8000"]
             Laravel["Laravel Application"]
         end
         
-        subgraph Frontend["Frontend Container<br/>(Vue.js)"]
+        subgraph Frontend["Frontend Container<br/>(Next.js)"]
             Node["Node.js Runtime"]
-            Vue["Vue.js Application"]
+            Vue["Next.js Application"]
         end
         
         subgraph Database["Database Container<br/>(MySQL)"]
@@ -344,8 +344,8 @@ graph TB
     
     subgraph Deployment["Deployment"]
         DOCKER["Docker"]
-        PHP["PHP 8.4 FPM"]
-        APACHE["Apache 2.4"]
+        PHP["PHP 8.4 CLI"]
+        APACHE["artisan serve"]
     end
     
     subgraph Tools["Developer Tools"]
@@ -385,20 +385,21 @@ graph TB
 
 ### Prerequisites
 
-- PHP 8.2+
+- PHP 8.1+ (the Docker image uses 8.4)
 - Composer
 - MySQL 8.0+
+- Redis (or set cache, session and queue to `file` / `file` / `sync`)
 - Docker (optional)
 
 ### Installation
 
 ```bash
-git clone https://github.com/Ahmed-Hamdy101/admin-api-laravel.git
-cd admin-api-laravel
+git clone <repo-url>
+cd <repo>/server
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate
+php artisan migrate --seed
 php artisan passport:install
 php artisan storage:link
 ```
@@ -413,7 +414,9 @@ php artisan serve
 ### Docker
 
 ```bash
-docker compose up --build
+docker compose up --build   # run from the repo root (starts client, API, worker, MySQL, Redis)
+docker compose exec backend php artisan passport:install   # once, creates OAuth keys
+docker compose exec backend php artisan db:seed            # once, demo data (password: password)
 # API at http://localhost:8000/api/v1
 ```
 
@@ -438,10 +441,12 @@ Authorization: Bearer <token>
 | GET | `/api/v1/profile` | ✅ | — | Get own profile |
 | PUT | `/api/v1/profile/info` | ✅ | — | Update name/email |
 | PUT | `/api/v1/profile/password` | ✅ | — | Change password |
-| GET/POST/PUT/DELETE | `/api/v1/users` | ✅ | admin | User CRUD |
-| GET/POST/PUT/DELETE | `/api/v1/roles` | ✅ | admin | Role CRUD |
-| GET/POST/PUT/DELETE | `/api/v1/products` | ✅ | admin, editor | Product CRUD |
-| POST | `/api/v1/uploads` | ✅ | admin, editor | Upload image |
+| GET/POST/PUT/DELETE | `/api/v1/users` | ✅ | Admin | User CRUD |
+| GET/POST/PUT/DELETE | `/api/v1/roles` | ✅ | Admin | Role CRUD |
+| GET/POST/PUT/DELETE | `/api/v1/products` | ✅ | Admin, Editor | Product CRUD |
+| POST | `/api/v1/uploads` | ✅ | Admin, Editor | Upload image |
+| GET | `/api/v1/chart` | ✅ | Admin, Editor | Dashboard chart data |
+| GET/POST | `/api/v1/permissions` | ✅ | — | List / create permissions |
 | GET | `/api/v1/orders` | ✅ | — | List orders (paginated) |
 | GET | `/api/v1/orders/{id}` | ✅ | — | Get order detail |
 | GET | `/api/v1/orders/export` | ✅ | — | Download orders CSV |
@@ -478,6 +483,30 @@ curl -X POST http://localhost:8000/api/v1/login \
 | `DB_USERNAME` | Database user |
 | `DB_PASSWORD` | Database password |
 | `APP_URL` | Application URL (used for storage links) |
+| `DB_PORT` | MySQL port (`3306`) |
+| `REDIS_HOST` | Redis host (`redis` in Docker, `127.0.0.1` locally) |
+| `REDIS_CLIENT` | Redis client (`predis`; requires `predis/predis`) |
+| `CACHE_DRIVER` | Cache backend. Laravel 10 reads this, not `CACHE_STORE` |
+| `SESSION_DRIVER` | Session backend (`file` or `redis`) |
+| `QUEUE_CONNECTION` | Queue backend (`sync` or `redis`; the Docker `worker` needs `redis`) |
+
+In Docker, Compose overrides the DB and Redis values, so `.env` only needs `APP_KEY` (generated on first start).
+
+---
+
+## Architecture direction and roadmap
+
+The API currently follows the standard Laravel layout (`app/Http`, `app/Models`, `routes/api.php`). A layered structure (Domain, Application, Infrastructure, Presentation) is being introduced step by step under `app/Modules`; it is a skeleton for now, and existing controllers are unchanged.
+
+| Doc | Content |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagrams, data flows, implementation roadmap |
+| [docs/BASELINE_TASKS.md](docs/BASELINE_TASKS.md) | Testing and security baseline checklist |
+| [integrations/payment](integrations/payment/README.md) | Payment plan (provider contracts, webhooks, idempotency) |
+| [integrations/ai](integrations/ai/README.md) | AI integration plan |
+| [diagrams/](diagrams) | Mermaid sources for the diagrams above |
+
+Planned order: baseline tests, performance (eager loading, indexes, Redis cache, k6 load tests), clean architecture, Octane, payments, then event-driven features.
 
 ---
 
@@ -487,4 +516,4 @@ curl -X POST http://localhost:8000/api/v1/login \
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome. Open an issue or a pull request.
