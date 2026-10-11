@@ -1,430 +1,139 @@
+# Admin Dashboard: Laravel REST API + Next.js
 
-# Laravel + React REST API (Decoupled Architecture)
+Full-stack admin dashboard. A Laravel 10 REST API (Passport auth, role-based access, products, orders) and a Next.js 16 client, wired together with Docker Compose so the whole stack starts with one command.
 
-A fully **decoupled** full-stack admin application:
-
-- **`server/`** — Production-ready Laravel REST API (Passport auth, RBAC, products, orders)
-- **`client/`** — Next.js (React) admin dashboard
-
-Each side runs independently with its own Docker setup and can be developed, deployed, and scaled separately.
-
-[![Laravel](https://img.shields.io/badge/Laravel-10.x-FF2D20?logo=laravel)](https://laravel.com)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://docker.com)
-[![License](https://img.shields.io/badge/license-MIT-green)](server/LICENSE.md)
+| Part | Stack | Docs |
+|---|---|---|
+| [`server/`](server) | Laravel 10, PHP 8.4, Passport, Spatie Permission, MySQL 8, Redis | [server/README.md](server/README.md) |
+| [`client/`](client) | Next.js 16, React 19, TypeScript, Tailwind 4, Axios, Bun | [client/README.md](client/README.md) |
 
 ---
 
-## Architecture Overview
+## Architecture
 
-```mermaid
-graph TB
-    subgraph Client["client/ — Next.js 16 + React 19"]
-        UI["Admin Dashboard UI"]
-        AuthClient["Auth / Token Storage"]
-        APIClient["API Client (fetch/axios)"]
-    end
-
-    subgraph Server["server/ — Laravel 10 REST API"]
-        Router["Router<br/>/api/v1"]
-        Middleware["Middleware<br/>Auth · CORS · CheckRole · Rate Limit"]
-        Controllers["Controllers"]
-        Requests["FormRequests"]
-        Resources["API Resources"]
-        Services["Services<br/>Auth · Order · CSV"]
-        Models["Eloquent Models"]
-    end
-
-    subgraph Data["Data Layer"]
-        MySQL[(MySQL)]
-        Redis[(Redis Cache)]
-        Storage["Laravel Storage<br/>(Images)"]
-    end
-
-    UI --> AuthClient
-    AuthClient --> APIClient
-    APIClient -->|"HTTP + Bearer Token"| Router
-    Router --> Middleware
-    Middleware --> Controllers
-    Controllers --> Requests
-    Controllers --> Services
-    Services --> Models
-    Controllers --> Resources
-    Models --> MySQL
-    Services --> Redis
-    Services --> Storage
-
-    style Client fill:#e3f2fd
-    style Server fill:#f3e5f5
-    style Data fill:#e8f5e9
+```
+Browser ──► localhost:3000 ──► client (Next.js)
+                                  │  /api/*  rewritten to  http://backend:8000/api/*
+                                  ▼
+                              backend (Laravel) ──► db (MySQL 8)
+                                  │             └─► redis
+                              worker (queue:work) ──► redis, db
 ```
 
-### Why Decoupled?
+- The browser only talks to the client on port 3000. Next.js `rewrites` proxy `/api/*` to the backend, so there is no CORS setup and no API URL to configure per machine.
+- Inside Docker, services reach each other by service name (`backend`, `db`, `redis`).
+- The API is versioned: every endpoint lives under `/api/v1`.
 
-| Benefit              | Description                                      |
-|----------------------|--------------------------------------------------|
-| Independent deploy   | Frontend & backend can be released separately    |
-| Tech flexibility     | Swap React/Next.js or Laravel without rewriting  |
-| Parallel development | Frontend & backend teams work in isolation       |
-| Scalability          | Scale API and UI independently                   |
-| Clear contracts      | API is the single source of truth                |
+## Repository layout
 
----
-
-## Docker Architecture
-
-```mermaid
-graph TB
-    subgraph Docker["Docker Environment"]
-        subgraph Frontend["Frontend Container"]
-            Next["Next.js 16<br/>React 19<br/>port 3000"]
-        end
-
-        subgraph Backend["Backend Container"]
-            PHP["PHP 8.2+ FPM"]
-            Apache["Apache / Nginx"]
-            Laravel["Laravel 10 + Passport"]
-        end
-
-        subgraph Database["Database Container"]
-            MySQL["MySQL 5.7 / 8.x<br/>port 33066→3306"]
-        end
-
-        Network["Docker Network: app"]
-    end
-
-    Next -->|"REST API calls<br/>Bearer Token"| Laravel
-    Laravel --> MySQL
-    PHP --> Laravel
-    Apache --> PHP
-
-    style Frontend fill:#e3f2fd
-    style Backend fill:#f3e5f5
-    style Database fill:#e8f5e9
+```
+.
+├── docker-compose.yml     # client, backend, worker, db, redis
+├── client/                # Next.js app (own Dockerfile)
+└── server/                # Laravel API (own Dockerfile, entrypoint.sh)
 ```
 
 ---
 
-## Project Structure
+## Quick start (Docker)
 
-```
-laravel-react-rest-api/
-├── client/                 # Next.js admin dashboard
-│   ├── app/                # App Router pages & layouts
-│   ├── public/
-│   ├── package.json
-│   ├── next.config.ts
-│   └── README.md
-│
-└── server/                 # Laravel REST API
-    ├── app/
-    │   ├── Http/
-    │   │   ├── Controllers/
-    │   │   ├── Middleware/     # CheckRole, etc.
-    │   │   ├── Requests/       # FormRequest validation
-    │   │   └── Resources/      # API transformers
-    │   ├── Models/
-    │   └── Services/
-    ├── routes/api.php          # /api/v1/*
-    ├── Dockerfile
-    ├── docker-compose.yaml
-    └── README.md
-```
-
----
-
-## Features
-
-### Backend (`server/`)
-
-- **JWT authentication** via Laravel Passport (OAuth2)
-- **Role-based access control** — `admin` / `editor` + permissions
-- **User management** — CRUD, profile, password change
-- **Product management** — full CRUD + image upload (Laravel Storage)
-- **Order management** — list, show, streaming CSV export
-- **API versioning** — all routes under `/api/v1`
-- **FormRequest validation** + **API Resources** (no raw model leakage)
-- **Swagger / OpenAPI** documentation (l5-swagger)
-- Docker-ready (PHP-FPM + Apache + MySQL)
-
-### Frontend (`client/`)
-
-- **Next.js 16** (App Router) + **React 19**
-- **TypeScript** + **Tailwind CSS 4**
-- Modern UI components (shadcn/ui style)
-- Bun as package manager (also works with npm/yarn/pnpm)
-
----
-
-## Authentication & Authorization Flow
-
-```mermaid
-sequenceDiagram
-    participant C as Client (Next.js)
-    participant API as Laravel API
-    participant Auth as AuthController
-    participant Passport as Passport OAuth2
-    participant DB as MySQL
-    participant MW as Auth + CheckRole Middleware
-
-    rect rgb(200, 150, 255)
-        Note over C,DB: Login
-        C->>API: POST /api/v1/login<br/>{email, password}
-        API->>Auth: Handle login
-        Auth->>DB: Verify credentials
-        DB-->>Auth: User found
-        Auth->>Passport: Create access token
-        Passport->>DB: Store oauth_access_tokens
-        Passport-->>Auth: JWT / access_token
-        Auth-->>C: 200 + access_token
-    end
-
-    rect rgb(150, 200, 255)
-        Note over C,DB: Protected Request
-        C->>API: GET /api/v1/profile<br/>Authorization: Bearer {token}
-        API->>MW: Validate token
-        MW->>Passport: Verify signature & expiry
-        Passport->>DB: Check token not revoked
-        DB-->>Passport: Valid
-        Passport-->>MW: Authenticated user
-        MW-->>API: User + Role
-        API-->>C: 200 + Profile
-    end
-
-    rect rgb(200, 200, 150)
-        Note over C,DB: Role-Based Access
-        C->>API: POST /api/v1/users<br/>Bearer {token}
-        API->>MW: CheckRole: admin
-        MW->>DB: Load user role
-        DB-->>MW: role = admin
-        MW-->>API: Allowed
-        API-->>C: 200 + result
-    end
-```
-
----
-
-## API Route Hierarchy & Access Control
-
-```mermaid
-graph TD
-    API["/api/v1"]
-
-    subgraph Public["PUBLIC (No Auth)"]
-        Login["POST /login"]
-        Register["POST /register"]
-    end
-
-    subgraph Authenticated["AUTHENTICATED (Bearer Token)"]
-        Logout["POST /logout"]
-        Profile["GET /profile"]
-        Orders["GET /orders"]
-        Export["GET /orders/export"]
-        Chart["GET /chart"]
-    end
-
-    subgraph AdminOnly["ADMIN ONLY"]
-        Users["GET|POST /users"]
-        Roles["GET|POST /roles"]
-    end
-
-    subgraph AdminEditor["ADMIN + EDITOR"]
-        Products["GET|POST /products"]
-        Upload["POST /uploads"]
-    end
-
-    API --> Public
-    API --> Authenticated
-    API --> AdminOnly
-    API --> AdminEditor
-
-    style Public fill:#c8e6c9
-    style Authenticated fill:#bbdefb
-    style AdminOnly fill:#ffccbc
-    style AdminEditor fill:#ffe0b2
-```
-
----
-
-## Database Schema
-
-```mermaid
-erDiagram
-    USERS ||--o{ ORDERS : creates
-    USERS }o--|| ROLES : has
-    ROLES ||--o{ PERMISSIONS : has_many
-    PRODUCTS ||--o{ ORDER_ITEMS : "in"
-    ORDERS ||--o{ ORDER_ITEMS : contains
-    USERS ||--o{ OAUTH_ACCESS_TOKENS : owns
-
-    USERS {
-        bigint id PK
-        string name
-        string email UK
-        string password
-        bigint role_id FK
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    ROLES {
-        bigint id PK
-        string name UK
-        text description
-    }
-
-    PERMISSIONS {
-        bigint id PK
-        string name UK
-        text description
-    }
-
-    PRODUCTS {
-        bigint id PK
-        string title
-        text description
-        decimal price
-        string image_path
-    }
-
-    ORDERS {
-        bigint id PK
-        bigint user_id FK
-        string first_name
-        string last_name
-        string email
-        decimal total_price
-        string status
-    }
-
-    ORDER_ITEMS {
-        bigint id PK
-        bigint order_id FK
-        bigint product_id FK
-        int quantity
-        decimal price
-    }
-
-    OAUTH_ACCESS_TOKENS {
-        string id PK
-        bigint user_id FK
-        string client_id FK
-        boolean revoked
-        timestamp expires_at
-    }
-```
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Docker & Docker Compose (recommended)
-- **or**
-    - PHP 8.2+, Composer, MySQL 8
-    - Node.js 20+ (or Bun)
-
-### 1. Clone the repository
+Requires Docker with Compose v2.
 
 ```bash
-git clone https://github.com/Ahmed-Hamdy101/laravel-react-rest-api.git
-cd laravel-react-rest-api
-git checkout decouple-architecture
+docker compose up --build
 ```
 
-### 2. Start the Backend (Laravel API)
+Migrations and Passport keys are set up automatically on backend start. Then, once:
 
 ```bash
+# demo roles, permissions, users, products, orders
+docker compose exec backend php artisan db:seed
+```
+
+| Service | URL / port |
+|---|---|
+| App (client) | http://localhost:3000 |
+| API | http://localhost:8000/api/v1 |
+| MySQL | `localhost:33066` (user `root`, password `root`, db `admin`) |
+| Redis | `localhost:63790` |
+
+**Demo login:** seeded users all use the password `password`. The first user (id 1) is the Admin. Get its email with:
+
+```bash
+docker compose exec backend php artisan tinker --execute="echo App\Models\User::first()->email;"
+```
+
+Useful commands:
+
+```bash
+docker compose logs -f backend          # API logs
+docker compose exec backend php artisan test
+docker compose down                     # stop
+docker compose down -v                  # stop and wipe the database and redis volumes
+```
+
+---
+
+## Run without Docker
+
+You need PHP 8.1+, Composer, MySQL 8 and [Bun](https://bun.sh).
+
+```bash
+# API
 cd server
-cp .env.example .env
-docker compose up --build -d
-
-# Inside the container (or locally):
+composer install
+cp .env.example .env        # then set DB_* for your local MySQL
 php artisan key:generate
-php artisan migrate
+php artisan migrate --seed
 php artisan passport:install
-php artisan storage:link
-```
+php artisan serve           # http://localhost:8000
 
-API available at: `http://localhost:8000/api/v1`
-
-### 3. Start the Frontend (Next.js)
-
-```bash
+# Client (second terminal)
 cd client
-bun install          # or: npm install
-bun dev              # or: npm run dev
+bun install
+bun dev                     # http://localhost:3000, proxies /api to localhost:8000
 ```
 
-Dashboard available at: `http://localhost:3000`
+Outside Docker, `.env.example` points Redis at the hostname `redis`. Either run a local Redis and set `REDIS_HOST=127.0.0.1`, or switch cache, session and queue to `file` / `file` / `sync`.
 
-> Set `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` in `client/.env.local`.
-
----
-
-## API Reference
-
-Protected routes require:
-
-```
-Authorization: Bearer <access_token>
-```
-
-| Method | Endpoint                | Auth | Role          | Description           |
-|--------|-------------------------|------|---------------|-----------------------|
-| POST   | `/api/v1/login`         | —    | —             | Login → returns token |
-| POST   | `/api/v1/register`      | —    | —             | Register new user     |
-| POST   | `/api/v1/logout`        | ✅   | —             | Revoke current token  |
-| GET    | `/api/v1/profile`       | ✅   | —             | Current user profile  |
-| GET    | `/api/v1/users`         | ✅   | admin         | List users            |
-| POST   | `/api/v1/users`         | ✅   | admin         | Create user           |
-| GET    | `/api/v1/products`      | ✅   | admin\|editor | List products         |
-| POST   | `/api/v1/products`      | ✅   | admin\|editor | Create product        |
-| GET    | `/api/v1/orders`        | ✅   | —             | List orders           |
-| GET    | `/api/v1/orders/export` | ✅   | —             | Stream CSV export     |
-| POST   | `/api/v1/uploads`       | ✅   | admin\|editor | Upload image          |
-
-Full docs & Swagger: see `server/README.md` and `/api/documentation`.
+To point the client at a separately hosted API, build with `BACKEND_URL=https://api.example.com bun run build` (the rewrite target is baked in at build time).
 
 ---
 
-## Tech Stack
+## API at a glance
 
-| Layer     | Technology                                      |
-|-----------|-------------------------------------------------|
-| Frontend  | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Bun |
-| Backend   | Laravel 10, PHP 8.2+, Passport, Spatie Permission |
-| Database  | MySQL 5.7 / 8.x                                 |
-| Auth      | Laravel Passport (OAuth2 / JWT)                 |
-| Docs      | l5-swagger (OpenAPI)                            |
-| Container | Docker + Docker Compose                         |
+All routes are under `/api/v1`. Protected routes need `Authorization: Bearer <token>`.
 
----
+| Area | Endpoints | Access |
+|---|---|---|
+| Auth | `POST /login`, `POST /register`, `POST /logout` | public / authenticated |
+| Profile | `GET /profile`, `PUT /profile/info`, `PUT /profile/password` | authenticated |
+| Users, Roles | `/users`, `/roles` (CRUD) | Admin |
+| Products | `/products` (CRUD), `POST /uploads`, `GET /chart` | Admin, Editor |
+| Orders | `GET /orders`, `GET /orders/{id}`, `GET /orders/export` | authenticated |
+| Permissions | `GET /permissions`, `POST /permissions` | authenticated |
 
-## Development Tips
+The client's Axios instance uses `baseURL: "/api"`, so client code calls paths like `/v1/login`.
 
-- **CORS** — Match `FRONTEND_URL` / allowed origins in Laravel with your client URL.
-- **Token storage** — Store the Passport access token securely (httpOnly cookie or secure storage).
-- **API contract** — Treat `/api/v1` as the contract between `client` and `server`.
-- **Environment** — Never commit real `.env` files. Use `.env.example` as the template.
+Full endpoint table, diagrams and design notes: [server/README.md](server/README.md).
 
 ---
 
-## Documentation
+## Roadmap
 
-- Backend deep-dive: [`server/README.md`](server/README.md)
-- Architecture diagrams: [`server/docs/`](server/docs/)
-- Client getting started: [`client/README.md`](client/README.md)
+Tracked in [`server/docs`](server/docs) and [`server/integrations`](server/integrations):
 
----
+1. Baseline: tests, security hardening ([BASELINE_TASKS.md](server/docs/BASELINE_TASKS.md))
+2. Performance: N+1 removal, indexes, Redis caching, load tests with k6
+3. Clean architecture: Domain / Application / Infrastructure / Presentation layers (skeleton in `server/app/Modules`)
+4. Runtime: Octane in place of `artisan serve`
+5. Payments ([plan](server/integrations/payment/README.md)), then AI features ([plan](server/integrations/ai/README.md)), then Kafka-based events
 
-## License
+## Setup notes
 
-MIT — see [`server/LICENSE.md`](server/LICENSE.md)
+- Redis is provisioned in Compose. Laravel 10 reads `CACHE_DRIVER` (not `CACHE_STORE`) and the `predis/predis` package must be in `composer.json` before cache, session or queue can actually use it.
+- The client image build needs a lockfile: run `bun install` once in `client/` to generate `bun.lock` and commit it.
 
----
+## Author
 
-⭐ **Star this repo if you find it useful!**
-
+**Ahmed Hamdy** · [GitHub](https://github.com/Ahmed-Hamdy101) · [LinkedIn](https://www.linkedin.com/in/ahmed-hamdy-ah)
