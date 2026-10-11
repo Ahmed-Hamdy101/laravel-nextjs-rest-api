@@ -1,0 +1,88 @@
+services:
+  client:
+    build:
+      context: ./client
+      args:
+        BACKEND_URL: http://backend:8000
+    container_name: admin_client
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build: ./server
+    container_name: admin_api
+    environment: &laravel-env
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: admin
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+      - /app/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build: ./server
+    container_name: admin_worker
+    command: php artisan queue:work --tries=3 --backoff=5
+    environment: *laravel-env
+    volumes:
+      - ./server:/app
+      - /app/vendor
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: admin_db
+    environment:
+      MYSQL_DATABASE: admin
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "33066:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: admin_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    ports:
+      - "63790:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  redisdata:
