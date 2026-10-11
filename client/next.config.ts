@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
+const backend = process.env.BACKEND_URL || "http://localhost:8000";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+    output: "standalone",
+    async rewrites() {
+        return {
+            beforeFiles: [{ source: "/api/:path*", destination: `${backend}/api/:path*` }],
+        };
+    },
 };
 
 export default nextConfig;
