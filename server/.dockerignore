@@ -1,0 +1,9 @@
+vendor
+node_modules
+.git
+.env
+.dbdata
+.idea
+.vscode
+public/images
+storage/logs/*
