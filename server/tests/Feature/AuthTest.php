@@ -11,7 +11,7 @@ class AuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    
+
 
     // ─── Register ─────────────────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ class AuthTest extends TestCase
             ->assertJsonValidationErrors(['password']);
     }
 
-    // ─── Login ────────────────────────────────────────────────────────────
+    // ─── Login.tsx ────────────────────────────────────────────────────────────
 
     public function test_user_can_login_with_valid_credentials(): void
     {
