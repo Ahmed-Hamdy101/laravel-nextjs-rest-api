@@ -53,7 +53,7 @@ class UserController extends Controller
         $users = User::with('role')->paginate(10);
 
         return response()->json(
-            UserResources::collection($users), 
+            UserResources::collection($users),
             200
         );
     }
@@ -91,7 +91,7 @@ class UserController extends Controller
 
      public function show( int $id): JsonResponse
     {
-        // define who can access to it 
+        // define who can access to it
          Gate::authorize('view', User::class);
         // Find user by primary key (id)
         $user = User::find($id);
@@ -120,7 +120,7 @@ class UserController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref : '#/components/schemas/CreateUserRequest'
+                ref : '#/login/schemas/CreateUserRequest'
             )
         ),
         responses: [
@@ -170,7 +170,7 @@ class UserController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref : '#/components/schemas/UpdateUserRequest'
+                ref : '#/login/schemas/UpdateUserRequest'
             )
         ),
         responses: [
@@ -282,7 +282,7 @@ class UserController extends Controller
         public function user(): JsonResponse
             {
                 $user = \Auth::user();
-                
+
                 // RETURN USER PERMISSIONS
                 return (new UserResources($user))->additional([
                     'meta' => [
@@ -304,7 +304,7 @@ class UserController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref : '#/components/schemas/ProfileUpdateRequest'
+                ref : '#/login/schemas/ProfileUpdateRequest'
             )
         ),
         responses: [
@@ -347,7 +347,7 @@ class UserController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref : '#/components/schemas/ProfileUpdatePassword'
+                ref : '#/login/schemas/ProfileUpdatePassword'
             )
         ),
         responses: [
@@ -362,7 +362,7 @@ class UserController extends Controller
      * Update logged-in user’s password.
      * Example: PUT /api/user/password
      */
-    
+
     public function updatePassword(Request $request): JsonResponse
     {
         // Validate the new password
