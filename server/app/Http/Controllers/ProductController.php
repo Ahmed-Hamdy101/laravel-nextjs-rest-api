@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
 
 class ProductController extends Controller
 {
-    
+
         #[OA\Get(
         path: '/v1/products',
         security: [['bearerAuth' => []]],
@@ -59,13 +59,13 @@ class ProductController extends Controller
                 required:true,
                 schema:new OA\Schema(type:'interger')
                 )
-            ], 
+            ],
         responses:[
             new OA\Response(
                 response: 200,
                 description: 'Retrieve One Single Product successfully'
             )
-         ]  
+         ]
        )
     ]
     public function show(string $id)
@@ -90,7 +90,7 @@ class ProductController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content:new OA\JsonContent(
-                ref: '#/components/schemas/ProductCreateRequest'
+                ref: '#/login/schemas/ProductCreateRequest'
                 )
             ),
         responses:[
@@ -98,7 +98,7 @@ class ProductController extends Controller
                 response: 201,
                 description: 'Product created successfully'
             )
-        ]  
+        ]
         )
     ]
 
@@ -135,7 +135,7 @@ class ProductController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                ref: '#/components/schemas/ProductUpdateRequest'
+                ref: '#/login/schemas/ProductUpdateRequest'
             )
         ),
         responses: [
@@ -155,7 +155,7 @@ class ProductController extends Controller
         return response()->json(
             new ProductResource($product),
             Response::HTTP_OK
-        ); 
+        );
     }
 
     /** Delete a product by ID. */
