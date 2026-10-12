@@ -30,7 +30,7 @@ class AuthController extends Controller
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Login successful'),
+            new OA\Response(response: 200, description: 'Login.tsx successful'),
             new OA\Response(response: 401, description: 'Invalid credentials'),
         ]
     )]
@@ -41,7 +41,7 @@ class AuthController extends Controller
             'email'    => 'required|email',
             'password' => 'required|string',
         ]);
-        
+
         // Attempt to login
         if (Auth::attempt($request->only('email', 'password'))) {
             // Get authenticated user and load role relationship
