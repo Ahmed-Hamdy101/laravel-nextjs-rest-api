@@ -1,5 +1,5 @@
 import React from "react";
-import {OptionProps} from "../../types"
+import {OptionProps} from "../../../types"
 export const Option = ({ Icon, title, selected, setSelected, open, notifs }:OptionProps) => {
 
     const isSelected = selected === title;

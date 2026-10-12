@@ -1,6 +1,6 @@
 import {Activity, Bell, DollarSign, Moon, Package, ShoppingCart, Sun, TrendingUp, User, Users} from "lucide-react";
 import React from "react";
-import {ContentProps} from "../../types";
+import {ContentProps} from "../../../types";
 
 export const Content = ({ isDark, setIsDark }:ContentProps) => {
     return (

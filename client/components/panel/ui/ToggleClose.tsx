@@ -1,6 +1,6 @@
 import {ChevronsRight} from "lucide-react";
 import React from "react";
-import { ToggleCloseProps} from "../../types"
+import { ToggleCloseProps} from "../../../types"
 
 export const ToggleClose = ({ open, setOpen }:ToggleCloseProps) => {
     return (

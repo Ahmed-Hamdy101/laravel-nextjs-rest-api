@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {BarChart3, DollarSign, HelpCircle, Home, Monitor, Settings, ShoppingCart, Tag, Users} from "lucide-react";
-import {TitleSection} from "@/components/ui/TitleSection";
+import {TitleSection} from "@/components/panel/ui/TitleSection";
 import {ToggleClose} from "./ToggleClose"
 import {Option} from "./Option"
 export const Sidebar = () => {
