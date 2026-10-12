@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import {Sidebar} from "@/components/ui/SideBar"
-import {Content} from "@/components/ui/Content";
+import {Sidebar} from "@/components/panel/ui/SideBar"
+import {Content} from "@/components/panel/ui/Content";
 
 export const Dashboard = () => {
     const [isDark, setIsDark] = useState(false);
