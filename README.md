@@ -121,13 +121,13 @@ Full endpoint table, diagrams and design notes: [server/README.md](server/README
 
 ## Roadmap
 
-Tracked in [`server/docs`](server/docs) and [`server/integrations`](server/integrations):
+Tracked in [`server/docs`](docs) and [`server/integrations`](docs/integrations):
 
-1. Baseline: tests, security hardening ([BASELINE_TASKS.md](server/docs/BASELINE_TASKS.md))
+1. Baseline: tests, security hardening ([UNIT-TEST-TASKS.md](docs/test/UNIT-TEST-TASKS.md))
 2. Performance: N+1 removal, indexes, Redis caching, load tests with k6
 3. Clean architecture: Domain / Application / Infrastructure / Presentation layers (skeleton in `server/app/Modules`)
 4. Runtime: Octane in place of `artisan serve`
-5. Payments ([plan](server/integrations/payment/README.md)), then AI features ([plan](server/integrations/ai/README.md)), then Kafka-based events
+5. Payments ([plan](docs/integrations/payment/README.md)), then AI features ([plan](docs/integrations/ai/README.md)), then Kafka-based events
 
 ## Setup notes
 
