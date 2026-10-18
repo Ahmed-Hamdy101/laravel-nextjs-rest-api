@@ -377,7 +377,7 @@ graph TB
 
 ---
 
-> 📖 **For detailed architecture diagrams, data flows, and system design documentation**, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+> 📖 **For detailed architecture diagrams, data flows, and system design documentation**, see [docs/ARCHITECTURE.md](../docs/architecture/ARCHITECTURE.md)
 
 ---
 
@@ -500,10 +500,10 @@ The API currently follows the standard Laravel layout (`app/Http`, `app/Models`,
 
 | Doc | Content |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagrams, data flows, implementation roadmap |
-| [docs/BASELINE_TASKS.md](docs/BASELINE_TASKS.md) | Testing and security baseline checklist |
-| [integrations/payment](integrations/payment/README.md) | Payment plan (provider contracts, webhooks, idempotency) |
-| [integrations/ai](integrations/ai/README.md) | AI integration plan |
+| [docs/ARCHITECTURE.md](../docs/architecture/ARCHITECTURE.md) | Diagrams, data flows, implementation roadmap |
+| [docs/BASELINE_TASKS.md](../docs/test/UNIT-TEST-TASKS.md) | Testing and security baseline checklist |
+| [integrations/payment](../docs/integrations/payment/README.md) | Payment plan (provider contracts, webhooks, idempotency) |
+| [integrations/ai](../docs/integrations/ai/README.md) | AI integration plan |
 | [diagrams/](diagrams) | Mermaid sources for the diagrams above |
 
 Planned order: baseline tests, performance (eager loading, indexes, Redis cache, k6 load tests), clean architecture, Octane, payments, then event-driven features.
