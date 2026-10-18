@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef } from 'react';
 
 const Login: React.FC = () => {
@@ -59,7 +61,7 @@ const Login: React.FC = () => {
                     <div
                         key={index}
                         ref={(el) => {
-                            return (blobRefs.current[index] = el);
+                            blobRefs.current[index] = el;
                         }}
                         className="blob"
                         style={{
