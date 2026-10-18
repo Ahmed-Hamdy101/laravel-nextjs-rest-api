@@ -38,6 +38,8 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:Admin')->group(function () {
             Route::apiResource('users', UserController::class);
             Route::apiResource('roles', RoleController::class);
+            // __ Permissions
+            Route::apiResource('permissions',PermissionController::class)->only(['index', 'store']);
         });
 
         // ─── Admin + editor ───────────────────────────────────────────────
@@ -49,11 +51,8 @@ Route::prefix('v1')->group(function () {
         });
 
         // ─── Any authenticated user ───────────────────────────────────────
-        Route::apiResource('orders', OrderController::class)->only(['index', 'show']);
         Route::get('orders/export', [OrderController::class, 'export']);
+        Route::apiResource('orders', OrderController::class)->only(['index', 'show']);
 
-        // __ Permissions 
-        Route::get('permissions',[PermissionController::class, 'index']);
-        Route::post('permissions',[PermissionController::class, 'store']);
     });
 });
