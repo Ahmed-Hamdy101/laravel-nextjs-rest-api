@@ -1,8 +1,13 @@
-@import "../node_modules/tailwindcss";
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;800&family=Space+Mono&display=swap');
 
+/* then the rest of your CSS */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #050505;
+}
+
+body {
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
 }
 
 @theme inline {
