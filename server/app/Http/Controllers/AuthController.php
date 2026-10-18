@@ -91,14 +91,15 @@ class AuthController extends Controller
             new OA\Response(response: 422, description: 'Validation failed'),
         ]
     )]
+    //  Register a new user and issue an access token
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->only(['f_name', 'l_name', 'email']);
         $data['password'] = Hash::make($request->input('password'));
 
         // Find default role or assign fallback ID (e.g. 2 for standard user)
-        $defaultRole = Role::where('name', 'user')->first();
-        $data['role_id'] = $defaultRole ? $defaultRole->id : 3;
+        $defaultRole = Role::where('name', 'user')->firstOrFail(); // throws ModelNotFoundException → 500
+        $data['role_id'] = $defaultRole->id;
 
         $user = User::create($data);
         $token = $user->createToken('admin')->accessToken;
@@ -125,10 +126,13 @@ class AuthController extends Controller
             new OA\Response(response: 200, description: 'Logout successful'),
         ]
     )]
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
+        // Revoke the token associated with the current user
+        $request->user()->token()->revoke();
+        //  Forget the JWT cookie
         $cookie = \Cookie::forget('jwt');
-
+        // Return a JSON response indicating successful logout
         return response()->json([
                 'message' => 'Successfully logged out',
         ])->withCookie($cookie);
