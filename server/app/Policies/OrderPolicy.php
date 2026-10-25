@@ -13,8 +13,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        // return true if the user has the 'view orders' permission
-        return  true;
+        return $user->hasPermission('View Orders');
     }
 
     /**
@@ -22,9 +21,9 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return $user->id ===$order->user_id || $user->hasPermission('view orders');
+        return $user->id === $order->user_id
+            || $user->hasPermission('View Orders');
     }
-
     /**
      * Determine whether the user can create models.
      */
