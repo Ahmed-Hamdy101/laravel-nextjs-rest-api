@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email');
-            $table->decimal('total_price', 12, 2)->nullable(); // optional but recommended
-            $table->string('status')->default('pending');      // optional but recommended
+            $table->decimal('total_price', 12, 2)->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
+
+            // Per-user order history (most common query)
+            $table->index(['user_id', 'created_at', 'id'], 'orders_user_created_idx');
+
+            // Admin filtering by status
+            $table->index(['status', 'created_at'], 'orders_status_created_idx');
         });
     }
 
