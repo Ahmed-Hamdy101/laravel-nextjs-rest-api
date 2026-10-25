@@ -19,7 +19,12 @@ return new class extends Migration
             $table->unsignedInteger('quantity');
             $table->timestamps();
 
+            // === Foreign Keys ===
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+
+            // === Indexes ===
+            $table->index('order_id');
+            $table->index(['product_id', 'created_at']);
         });
     }
 
