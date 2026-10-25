@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('image');
             $table->decimal('price', 8, 2);
             $table->timestamps();
+
+            // === Indexes ===
+            $table->index('title');
+            $table->index('created_at');
         });
 
     }
