@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ImageController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\API\Admin\DashboardController;
+use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Order\uploads\ImageController;
+use App\Http\Controllers\API\Order\OrderController;
+use App\Http\Controllers\API\Product\ProductController;
+use App\Http\Controllers\API\Role\PermissionController;
+use App\Http\Controllers\API\Role\RoleController;
+use App\Http\Controllers\API\User\UserController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\DashboardController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes — v1
