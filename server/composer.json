@@ -5,11 +5,11 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.5.12",
-        "darkaonline/l5-swagger": "^8.6",
+        "php": "^8.5",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^10.10",
-        "laravel/passport": "*",
+        "laravel/framework": "^10.50",
+        "laravel/passport": "^12.4.3",
+        "darkaonline/l5-swagger": "^8.6.5",
         "laravel/tinker": "^2.8",
         "predis/predis": "^3.7",
         "spatie/laravel-permission": "^6.25"
@@ -63,6 +63,14 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.5.12"
+        },
+        "policy": {
+            "advisories": {
+            "block": false
+            }
         }
     },
     "minimum-stability": "stable",
